@@ -1,52 +1,47 @@
-import { ConnectWallet } from "@thirdweb-dev/react";
+import { ConnectWallet, MediaRenderer, useActiveListings, useContract } from "@thirdweb-dev/react";
+import { BigNumber } from "ethers";
 import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
 
 const Home: NextPage = () => {
+  const {contract} = useContract('0x9A4b0717233E6528e4bEf7B77921D581b27eF807','marketplace')
+
+  const { data: nfts, isLoading} = useActiveListings(contract);
   return (
+ 
     <div className={styles.container}>
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="http://thirdweb.com/">thirdweb</a>!
-        </h1>
+        <ConnectWallet />
+         {!isLoading ? (
+           <div>
+             { nfts && nfts.map((nft) => {
+                 return (
+       
+                  <div>
+                    <MediaRenderer
+                     src={nft.asset.image}
+                     height="200px"
+                     width="200px" />
+                   <p>{nft.asset.name}</p>
+                   <p>Price :{nft.buyoutCurrencyValuePerToken.displayValue}MATIC</p>
+                   <button onClick={async () => {
+                     try{
+                       await contract?.buyoutListing(BigNumber.from(nft.id), 1);
+                     }catch (error){
+                      console.error(error);
+                      alert(error);
 
-        <p className={styles.description}>
-          Get started by configuring your desired network in{" "}
-          <code className={styles.code}>pages/_app.tsx</code>, then modify the{" "}
-          <code className={styles.code}>pages/index.tsx</code> file!
-        </p>
+                     }
+                   }
+                  }>Buy Now</button>
+                    </div>
+                 );
 
-        <div className={styles.connect}>
-          <ConnectWallet />
-        </div>
-
-        <div className={styles.grid}>
-          <a href="https://portal.thirdweb.com/" className={styles.card}>
-            <h2>Portal &rarr;</h2>
-            <p>
-              Guides, references and resources that will help you build with
-              thirdweb.
-            </p>
-          </a>
-
-          <a href="https://thirdweb.com/dashboard" className={styles.card}>
-            <h2>Dashboard &rarr;</h2>
-            <p>
-              Deploy, configure and manage your smart contracts from the
-              dashboard.
-            </p>
-          </a>
-
-          <a
-            href="https://portal.thirdweb.com/templates"
-            className={styles.card}
-          >
-            <h2>Templates &rarr;</h2>
-            <p>
-              Discover and clone template projects showcasing thirdweb features.
-            </p>
-          </a>
-        </div>
+             })}
+           </div>
+          ) : (
+            <div>Loading...</div>
+         )}
       </main>
     </div>
   );
